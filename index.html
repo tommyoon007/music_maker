@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 Music Maker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .control-group label {
+            color: white;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4CAF50;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #4CAF50;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        select option {
+            background: #667eea;
+            color: white;
+        }
+
+        .sequencer {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .sequencer-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .note-label {
+            width: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-weight: bold;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .step {
+            flex: 1;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .step:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .step.active {
+            background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+            box-shadow: 0 4px 15px rgba(0, 114, 255, 0.5);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .stop-btn {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .random-btn {
+            background: linear-gradient(135deg, #a770ef 0%, #cf8bf3 100%);
+        }
+
+        .clear-btn {
+            background: linear-gradient(135deg, #757575 0%, #424242 100%);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .instructions h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .instructions ul {
+            list-style: none;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.8;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .instructions li::before {
+            content: "• ";
+            color: #4CAF50;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Music Maker</h1>
+        <p class="subtitle">클릭해서 패턴을 만들고 재생해보세요!</p>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>템포: <span id="tempo-value">120</span> BPM</label>
+                <input type="range" id="tempo" min="60" max="180" value="120">
+            </div>
+
+            <div class="control-group">
+                <label>볼륨: <span id="volume-value">-10</span> dB</label>
+                <input type="range" id="volume" min="-30" max="0" value="-10">
+            </div>
+
+            <div class="control-group">
+                <label>음계</label>
+                <select id="scale">
+                    <option value="major">메이저</option>
+                    <option value="minor">마이너</option>
+                    <option value="pentatonic">펜타토닉</option>
+                    <option value="blues">블루스</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="sequencer" id="sequencer"></div>
+
+        <div class="buttons">
+            <button class="play-btn" id="play-btn">▶️ 재생</button>
+            <button class="random-btn" id="random-btn">🎲 랜덤</button>
+            <button class="clear-btn" id="clear-btn">🗑️ 초기화</button>
+        </div>
+
+        <div class="instructions">
+            <h3>💡 사용 방법</h3>
+            <ul>
+                <li>그리드를 클릭해서 패턴을 만드세요 (파란색 = 활성화)</li>
+                <li>템포와 볼륨을 조절할 수 있습니다</li>
+                <li>다양한 음계를 선택해보세요</li>
+                <li>랜덤 버튼으로 새로운 패턴을 생성할 수 있습니다</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 음계 정의
+        const scales = {
+            major: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'],
+            minor: ['C4', 'D4', 'Eb4', 'F4', 'G4', 'Ab4', 'Bb4', 'C5'],
+            pentatonic: ['C4', 'D4', 'E4', 'G4', 'A4', 'C5'],
+            blues: ['C4', 'Eb4', 'F4', 'Gb4', 'G4', 'Bb4', 'C5']
+        };
+
+        // 상태 관리
+        let isPlaying = false;
+        let currentScale = 'major';
+        let pattern = [
+            [1, 0, 0, 1, 0, 0, 1, 0],
+            [0, 0, 1, 0, 0, 1, 0, 0],
+            [0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 1, 0, 1, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0]
+        ];
+
+        // Tone.js 설정
+        const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+        synth.volume.value = -10;
+        let sequence = null;
+
+        // UI 요소
+        const sequencerEl = document.getElementById('sequencer');
+        const playBtn = document.getElementById('play-btn');
+        const randomBtn = document.getElementById('random-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const tempoSlider = document.getElementById('tempo');
+        const volumeSlider = document.getElementById('volume');
+        const scaleSelect = document.getElementById('scale');
+        const tempoValue = document.getElementById('tempo-value');
+        const volumeValue = document.getElementById('volume-value');
+
+        // 시퀀서 UI 생성
+        function createSequencer() {
+            sequencerEl.innerHTML = '';
+            const currentScaleNotes = scales[currentScale];
+            
+            pattern.forEach((row, rowIndex) => {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'sequencer-row';
+                
+                const labelEl = document.createElement('div');
+                labelEl.className = 'note-label';
+                labelEl.textContent = currentScaleNotes[rowIndex] || '-';
+                rowEl.appendChild(labelEl);
+                
+                row.forEach((active, colIndex) => {
+                    const stepEl = document.createElement('div');
+                    stepEl.className = 'step' + (active ? ' active' : '');
+                    stepEl.onclick = () => toggleStep(rowIndex, colIndex);
+                    rowEl.appendChild(stepEl);
+                });
+                
+                sequencerEl.appendChild(rowEl);
+            });
+        }
+
+        // 스텝 토글
+        function toggleStep(row, col) {
+            pattern[row][col] = pattern[row][col] ? 0 : 1;
+            createSequencer();
+        }
+
+        // 재생/정지
+        playBtn.onclick = async () => {
+            if (!isPlaying) {
+                await Tone.start();
+                
+                if (sequence) {
+                    sequence.dispose();
+                }
+
+                const currentScaleNotes = scales[currentScale];
+                
+                sequence = new Tone.Sequence((time, step) => {
+                    pattern.forEach((row, rowIndex) => {
+                        if (row[step] && currentScaleNotes[rowIndex]) {
+                            synth.triggerAttackRelease(currentScaleNotes[rowIndex], '8n', time);
+                        }
+                    });
+                }, [0, 1, 2, 3, 4, 5, 6, 7], '8n');
+
+                sequence.start(0);
+                Tone.Transport.start();
+                isPlaying = true;
+                playBtn.textContent = '⏸️ 정지';
+                playBtn.className = 'stop-btn';
+            } else {
+                Tone.Transport.stop();
+                if (sequence) {
+                    sequence.stop();
+                }
+                isPlaying = false;
+                playBtn.textContent = '▶️ 재생';
+                playBtn.className = 'play-btn';
+            }
+        };
+
+        // 랜덤 패턴
+        randomBtn.onclick = () => {
+            pattern = pattern.map(row => 
+                row.map(() => Math.random() > 0.65 ? 1 : 0)
+            );
+            createSequencer();
+        };
+
+        // 초기화
+        clearBtn.onclick = () => {
+            pattern = pattern.map(row => row.map(() => 0));
+            createSequencer();
+        };
+
+        // 컨트롤 이벤트
+        tempoSlider.oninput = (e) => {
+            const value = e.target.value;
+            Tone.Transport.bpm.value = value;
+            tempoValue.textContent = value;
+        };
+
+        volumeSlider.oninput = (e) => {
+            const value = e.target.value;
+            synth.volume.value = value;
+            volumeValue.textContent = value;
+        };
+
+        scaleSelect.onchange = (e) => {
+            currentScale = e.target.value;
+            // 새로운 음계의 음표 수에 맞게 패턴 조정
+            const newScaleLength = scales[currentScale].length;
+            if (pattern.length > newScaleLength) {
+                pattern = pattern.slice(0, newScaleLength);
+            } else {
+                while (pattern.length < newScaleLength) {
+                    pattern.push(new Array(8).fill(0));
+                }
+            }
+            createSequencer();
+        };
+
+        // 초기 UI 생성
+        createSequencer();
+    </script>
+</body>
+</html>
